@@ -1,0 +1,6 @@
+runtime: nodejs16
+service: server
+entrypoint: node dist/src/main.js
+env_variables:
+  DATABASE_URL: "postgresql://postgres:root@localhost/valorant?host=/cloudsql/vts-372:us-west1:vts-db"
+  CLIENT_ADDRESS: "https://vts-372.uw.r.appspot.com"

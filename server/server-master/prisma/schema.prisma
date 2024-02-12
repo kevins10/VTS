@@ -1,0 +1,158 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// ---- Generators and datasource ----
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---- Models ----
+model User {
+  user_id String @id @default(cuid())
+
+  teams       Rosters[]
+  tournaments TournamentOrganizers[]
+
+  // Auth fields
+  username     String
+  email        String @unique
+  password     String
+  phone_number String @unique
+
+  date_of_birth DateTime
+  first_name    String
+  last_name     String
+
+  riot_name String
+  riot_tag  String
+  user_type UserType @default(USER)
+
+  profilePicture Bytes?  @db.ByteA
+  discord        String?
+
+  // Additional Information
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([user_id, phone_number, email])
+}
+
+model Lobby {
+  description String?
+  lobby_id    String   @id @default(cuid())
+  host        String
+  rank        String
+  map         String
+  players     String[]
+  in_progress Boolean
+  createdAt   DateTime @default(now())
+}
+
+// Many to Many relationship (User <-> Team)
+model Team {
+  team_name    String    @id @unique @db.VarChar(32)
+  team_acronym String    @unique @db.VarChar(4)
+  players      Rosters[]
+
+  teamPicture Bytes? @db.ByteA
+
+  created_date DateTime     @default(now())
+  tournaments  Tournament[]
+
+  @@index([team_name])
+}
+
+model Tournament {
+  tournament_id Int @id @default(autoincrement())
+
+  organizers TournamentOrganizers[]
+
+  bracket_data Json?
+
+  max_teams Int
+  teams     Team[]
+
+  tournament_name   String           @db.VarChar(64)
+  tournament_format TournamentFormat
+  description       String
+  prize_pool        Decimal
+
+  start_date DateTime
+  end_date   DateTime
+
+  tournamentPicture Bytes? @db.ByteA
+
+  createdAt DateTime @default(now())
+  updateAt  DateTime @updatedAt
+}
+
+// Many to Many relationship (User <-> Team)
+model Rosters {
+  player_id String
+  player    User   @relation(fields: [player_id], references: [user_id], onUpdate: Cascade, onDelete: Cascade)
+
+  team_name String
+  team      Team   @relation(fields: [team_name], references: [team_name], onUpdate: Cascade, onDelete: Cascade)
+
+  join_date DateTime @default(now())
+
+  @@id([player_id, team_name])
+}
+
+// Many to Many relationship (User <-> Tournament)
+model TournamentOrganizers {
+  organizer_id String
+  organizer    User   @relation(fields: [organizer_id], references: [user_id], onUpdate: Cascade, onDelete: Cascade)
+
+  tournament_id Int
+  tournament    Tournament @relation(fields: [tournament_id], references: [tournament_id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@id([organizer_id, tournament_id])
+}
+
+//model Match {
+//tournament_id Int
+//tournament    Tournament @relation(fields: [tournament_id], references: [tournament_id])
+
+// match_id Int @id @unique @db.Oid
+
+//team_ids Int[]
+//teams    Team[]
+//}
+
+// ---- Enums ---- 
+enum UserType {
+  ADMIN
+  USER
+}
+
+enum TournamentFormat {
+  RO8
+  RO16
+  RO32
+}
+
+// Valorant-specific enums
+enum League {
+  Iron
+  Bronze
+  Silver
+  Gold
+  Platinum
+  Diamond
+  Ascendant
+  Immortal
+  Radiant
+}
+
+enum Role {
+  Controller
+  Sentinel
+  Duelist
+  Initiator
+}

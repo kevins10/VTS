@@ -1,0 +1,4 @@
+runtime: nodejs16
+service: default
+env_variables:
+  PUBLIC_API_ADDRESS: "https://server-dot-vts-372.uw.r.appspot.com"
